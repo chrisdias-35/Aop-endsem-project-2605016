@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitPulse - Modern Workout Tracker</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen transition-colors duration-200 flex flex-col md:flex-row">
+
+    <!-- Sidebar / Navigation -->
+    <aside class="w-full md:w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-shrink-0 flex flex-col justify-between z-20">
+        <div>
+            <!-- Logo & Brand -->
+            <div class="p-5 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-brand-500 text-white flex items-center justify-center font-bold text-xl shadow-lg shadow-brand-500/30">
+                        <i class="fa-solid font-bold fa-bolt"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg leading-tight tracking-wide">FitPulse</h1>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Workout Tracker</p>
+                    </div>
+                </div>
+                <!-- Theme Toggle (Mobile Header) -->
+                <button id="themeToggleBtnMobile" class="md:hidden text-gray-500 dark:text-gray-400 hover:text-brand-500 p-2 rounded-lg">
+                    <i class="fa-solid fa-moon dark:hidden"></i>
+                    <i class="fa-solid fa-sun hidden dark:block"></i>
+                </button>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="p-4 space-y-1">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-sm transition-all bg-brand-500 text-white shadow-md shadow-brand-500/20">
+                    <i class="fa-solid fa-chart-pie w-5 text-center"></i>
+                    <span>Dashboard</span>
+                </button>
+
+                <button onclick="switchTab('logger')" id="nav-logger" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-sm transition-all text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50">
+                    <i class="fa-solid fa-square-plus w-5 text-center"></i>
+                    <span>Log Workout</span>
+                </button>
+
+                <button onclick="switchTab('routines')" id="nav-routines" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-sm transition-all text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50">
+                    <i class="fa-solid fa-layer-group w-5 text-center"></i>
+                    <span>Routines & Templates</span>
+                </button>
+
+                <button onclick="switchTab('history')" id="nav-history" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-sm transition-all text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50">
+                    <i class="fa-solid fa-clock-rotate-left w-5 text-center"></i>
+                    <span>History & Logs</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Sidebar Footer Controls -->
+        <div class="p-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
+            <!-- Rest Timer Widget Widget Button -->
+            <button onclick="openTimerModal()" class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-700 text-sm font-medium transition-colors">
+                <span class="flex items-center space-x-2">
+                    <i class="fa-solid fa-stopwatch text-brand-500"></i>
+                    <span>Rest Timer</span>
+                </span>
+                <span id="timerDisplayShort" class="font-mono text-xs px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-800">00:00</span>
+            </button>
+
+            <!-- Theme Toggle Desktop -->
+            <button id="themeToggleBtn" class="hidden md:flex w-full items-center justify-between px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-700 text-sm font-medium transition-colors">
+                <span class="flex items-center space-x-2">
+                    <i class="fa-solid fa-moon dark:hidden"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-amber-400"></i>
+                    <span id="themeText">Dark Mode</span>
+                </span>
+                <i class="fa-solid fa-circle-half-stroke text-xs opacity-60"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content Body -->
+    <main class="flex-1 p-4 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
+
+        <!-- ================= DASHBOARD TAB ================= -->
+        <section id="tab-dashboard" class="space-y-6">
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold tracking-tight">Fitness Overview</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Track your progress and stay consistent.</p>
+                </div>
+                <button onclick="switchTab('logger')" class="inline-flex items-center justify-center space-x-2 bg-brand-500 hover:bg-brand-600 text-white px-5 py-2.5 rounded-xl font-medium shadow-md shadow-brand-500/20 transition-all">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Start Workout</span>
+                </button>
+            </div>
+
+            <!-- Stats Summary Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Stat Card 1 -->
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-gray-500 dark:text-gray-400 mb-2">
+                        <span class="text-xs font-semibold uppercase tracking-wider">Total Workouts</span>
+                        <div class="p-2 rounded-lg bg-blue-500/10 text-blue-500"><i class="fa-solid fa-dumbbell"></i></div>
+                    </div>
+                    <div>
+                        <div id="statTotalWorkouts" class="text-2xl font-bold">0</div>
+                        <span class="text-xs text-gray-400">Lifetime logged sessions</span>
+                    </div>
+                </div>
+
+                <!-- Stat Card 2 -->
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-gray-500 dark:text-gray-400 mb-2">
+                        <span class="text-xs font-semibold uppercase tracking-wider">Active Streak</span>
+                        <div class="p-2 rounded-lg bg-orange-500/10 text-orange-500"><i class="fa-solid fa-fire"></i></div>
+                    </div>
+                    <div>
+                        <div id="statStreak" class="text-2xl font-bold">0 Days</div>
+                        <span class="text-xs text-gray-400">Consecutive activity</span>
+                    </div>
+                </div>
+
+                <!-- Stat Card 3 -->
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-gray-500 dark:text-gray-400 mb-2">
+                        <span class="text-xs font-semibold uppercase tracking-wider">Total Volume</span>
+                        <div class="p-2 rounded-lg bg-emerald-500/10 text-emerald-500"><i class="fa-solid fa-weight-hanging"></i></div>
+                    </div>
+                    <div>
+                        <div id="statTotalVolume" class="text-2xl font-bold">0 kg</div>
+                        <span class="text-xs text-gray-400">Weight lifted total</span>
+                    </div>
+                </div>
+
+                <!-- Stat Card 4 -->
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-gray-500 dark:text-gray-400 mb-2">
+                        <span class="text-xs font-semibold uppercase tracking-wider">Total Time</span>
+                        <div class="p-2 rounded-lg bg-purple-500/10 text-purple-500"><i class="fa-solid fa-hourglass-half"></i></div>
+                    </div>
+                    <div>
+                        <div id="statTotalTime" class="text-2xl font-bold">0 hrs</div>
+                        <span class="text-xs text-gray-400">Spent exercising</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Volume Progression Chart -->
+                <div class="lg:col-span-2 bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-base">Volume Progress Over Time</h3>
+                        <span class="text-xs text-gray-400">Last 7 sessions</span>
+                    </div>
+                    <div class="h-64 relative">
+                        <canvas id="volumeChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Category Breakdown Chart -->
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-base">Category Breakdown</h3>
+                        <i class="fa-solid fa-chart-pie text-gray-400 text-sm"></i>
+                    </div>
+                    <div class="h-64 relative flex items-center justify-center">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity List -->
+            <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-base">Recent Activity</h3>
+                    <button onclick="switchTab('history')" class="text-xs font-medium text-brand-500 hover:underline">View All</button>
+                </div>
+                <div id="dashboardRecentList" class="divide-y divide-gray-100 dark:divide-gray-700/50">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= LOGGER TAB ================= -->
+        <section id="tab-logger" class="space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold tracking-tight">Log Workout Session</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Record your exercises, sets, reps, and weights.</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="resetLoggerForm()" class="px-4 py-2 rounded-xl text-sm font-medium border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                        Clear Form
+                    </button>
+                    <button onclick="saveWorkoutSession()" class="px-5 py-2 rounded-xl text-sm font-medium bg-brand-500 hover:bg-brand-600 text-white shadow-md shadow-brand-500/20 transition-all">
+                        <i class="fa-solid fa-check mr-1"></i> Save Workout
+                    </button>
+                </div>
+            </div>
+
+            <!-- Workout Session Details Header -->
+            <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Workout Name</label>
+                    <input type="text" id="sessionTitle" placeholder="e.g. Morning Upper Body" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Date</label>
+                    <input type="date" id="sessionDate" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Duration (minutes)</label>
+                    <input type="number" id="sessionDuration" placeholder="45" min="1" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                </div>
+            </div>
+
+            <!-- Exercises Container -->
+            <div id="exerciseListContainer" class="space-y-4">
+                <!-- Dynamic exercise cards added here -->
+            </div>
+
+            <!-- Add Exercise Action Button -->
+            <button onclick="addExerciseCard()" class="w-full py-4 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-brand-500 hover:text-brand-500 dark:hover:border-brand-500 dark:hover:text-brand-500 transition-all flex items-center justify-center space-x-2 font-medium">
+                <i class="fa-solid fa-plus-circle text-lg"></i>
+                <span>Add Exercise</span>
+            </button>
+        </section>
+
+        <!-- ================= ROUTINES TAB ================= -->
+        <section id="tab-routines" class="space-y-6 hidden">
+            <div>
+                <h2 class="text-2xl font-bold tracking-tight">Routines & Workout Templates</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Load ready-to-use preset routines or save your own custom workouts.</p>
+            </div>
+
+            <!-- Preset Routines Grid -->
+            <div>
+                <h3 class="text-base font-bold mb-3 flex items-center space-x-2">
+                    <i class="fa-solid fa-star text-amber-500"></i>
+                    <span>Pre-loaded Workout Templates</span>
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="presetTemplatesContainer">
+                    <!-- Dynamic Preset Templates loaded here -->
+                </div>
+            </div>
+
+            <!-- Custom User Routines -->
+            <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-base font-bold flex items-center space-x-2">
+                        <i class="fa-solid fa-bookmark text-brand-500"></i>
+                        <span>Your Custom Saved Routines</span>
+                    </h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="customRoutinesContainer">
+                    <!-- Dynamic Custom Routines loaded here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= HISTORY TAB ================= -->
+        <section id="tab-history" class="space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold tracking-tight">Workout History</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Search, filter, and review all previous workouts.</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="exportData()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                        <i class="fa-solid fa-download mr-1"></i> Export JSON
+                    </button>
+                    <label class="px-4 py-2 rounded-xl text-xs font-semibold bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors cursor-pointer">
+                        <i class="fa-solid fa-upload mr-1"></i> Import JSON
+                        <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="importData(event)">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Filters Bar -->
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm flex flex-col md:flex-row gap-3 items-center justify-between">
+                <div class="relative w-full md:w-72">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-gray-400 text-xs"></i>
+                    <input type="text" id="historySearch" oninput="filterHistory()" placeholder="Search workout name or exercise..." class="w-full pl-9 pr-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div class="flex items-center space-x-2 w-full md:w-auto">
+                    <select id="historyCategoryFilter" onchange="filterHistory()" class="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500 w-full md:w-auto">
+                        <option value="ALL">All Categories</option>
+                        <option value="Strength">Strength</option>
+                        <option value="Cardio">Cardio</option>
+                        <option value="Flexibility">Flexibility</option>
+                        <option value="Bodyweight">Bodyweight</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- History List Table/Cards -->
+            <div id="historyLogsList" class="space-y-4">
+                <!-- Log Items Rendered Dynamically -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- REST TIMER MODAL -->
+    <div id="timerModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-gray-200 dark:border-gray-700 text-center space-y-6 relative">
+            <button onclick="closeTimerModal()" class="absolute right-4 top-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div>
+                <h3 class="font-bold text-lg">Rest Timer</h3>
+                <p class="text-xs text-gray-400">Take a breath before your next set!</p>
+            </div>
+
+            <!-- Timer Counter Display -->
+            <div class="py-6 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+                <span id="timerModalDisplay" class="text-5xl font-mono font-bold tracking-widest text-brand-500">01:00</span>
+            </div>
+
+            <!-- Preset Quick Timer Controls -->
+            <div class="grid grid-cols-4 gap-2">
+                <button onclick="setTimerSeconds(30)" class="py-2 bg-gray-100 dark:bg-gray-700 hover:bg-brand-500 hover:text-white rounded-xl text-xs font-medium transition-colors">+30s</button>
+                <button onclick="setTimerSeconds(60)" class="py-2 bg-gray-100 dark:bg-gray-700 hover:bg-brand-500 hover:text-white rounded-xl text-xs font-medium transition-colors">1m</button>
+                <button onclick="setTimerSeconds(90)" class="py-2 bg-gray-100 dark:bg-gray-700 hover:bg-brand-500 hover:text-white rounded-xl text-xs font-medium transition-colors">1.5m</button>
+                <button onclick="setTimerSeconds(120)" class="py-2 bg-gray-100 dark:bg-gray-700 hover:bg-brand-500 hover:text-white rounded-xl text-xs font-medium transition-colors">2m</button>
+            </div>
+
+            <!-- Timer Action Buttons -->
+            <div class="flex items-center space-x-3">
+                <button id="timerStartBtn" onclick="toggleTimer()" class="flex-1 py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-medium text-sm transition-all shadow-md shadow-brand-500/20">
+                    Start
+                </button>
+                <button onclick="resetTimer()" class="px-4 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-xl text-sm font-medium transition-colors">
+                    Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Toast Message Container -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <script>
+        // ================= APPLICATION STATE =================
+        const STORAGE_KEY = 'fitpulse_workout_logs_v1';
+        const CUSTOM_ROUTINES_KEY = 'fitpulse_custom_routines_v1';
+
+        let workoutLogs = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        let customRoutines = JSON.parse(localStorage.getItem(CUSTOM_ROUTINES_KEY)) || [];
+
+        // Preset Workout Templates
+        const PRESET_TEMPLATES = [
+            {
+                id: 'tmpl-push',
+                name: 'Push Day (Chest, Shoulders & Triceps)',
+                category: 'Strength',
+                exercises: [
+                    { name: 'Barbell Bench Press', category: 'Strength', sets: [{ reps: 10, weight: 60, duration: '' }, { reps: 8, weight: 70, duration: '' }] },
+                    { name: 'Overhead Shoulder Press', category: 'Strength', sets: [{ reps: 12, weight: 35, duration: '' }, { reps: 10, weight: 40, duration: '' }] },
+                    { name: 'Tricep Rope Pushdown', category: 'Strength', sets: [{ reps: 15, weight: 25, duration: '' }] }
+                ]
+            },
+            {
+                id: 'tmpl-pull',
+                name: 'Pull Day (Back & Biceps)',
+                category: 'Strength',
+                exercises: [
+                    { name: 'Lat Pulldown', category: 'Strength', sets: [{ reps: 12, weight: 50, duration: '' }, { reps: 10, weight: 55, duration: '' }] },
+                    { name: 'Seated Cable Row', category: 'Strength', sets: [{ reps: 12, weight: 45, duration: '' }] },
+                    { name: 'Dumbbell Bicep Curls', category: 'Strength', sets: [{ reps: 12, weight: 14, duration: '' }] }
+                ]
+            },
+            {
+                id: 'tmpl-hiit',
+                name: 'HIIT Cardio Blast',
+                category: 'Cardio',
+                exercises: [
+                    { name: 'Treadmill Sprint', category: 'Cardio', sets: [{ reps: 1, weight: 0, duration: '15' }] },
+                    { name: 'Jumping Jacks', category: 'Cardio', sets: [{ reps: 30, weight: 0, duration: '2' }] },
+                    { name: 'Burpees', category: 'Bodyweight', sets: [{ reps: 15, weight: 0, duration: '3' }] }
+                ]
+            }
+        ];
+
+        // Global Chart Instances
+        let volumeChartInstance = null;
+        let categoryChartInstance = null;
+
+        // Timer Variables
+        let timerTimeRemaining = 60;
+        let timerTotalTime = 60;
+        let timerInterval = null;
+        let isTimerRunning = false;
+
+        // Audio Alert Synth using Web Audio API
+        function playTimerBeep() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, ctx.currentTime); // A5 note
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.5);
+            } catch (e) {
+                console.log('Audio playback prevented or unsupported.');
+            }
+        }
+
+        // On Page Load
+        window.addEventListener('DOMContentLoaded', () => {
+            initializeTheme();
+            setDefaultDate();
+            renderDashboard();
+            renderPresetTemplates();
+            renderCustomRoutines();
+            renderHistoryLogs();
+            addExerciseCard(); // Start with one initial exercise card in logger
+        });
+
+        // Theme Toggle Functionality
+        function initializeTheme() {
+            const isDark = localStorage.getItem('theme') === 'dark' || 
+                (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+            // Re-render charts to adapt colors
+            renderCharts();
+        }
+
+        document.getElementById('themeToggleBtn').addEventListener('click', toggleTheme);
+        document.getElementById('themeToggleBtnMobile').addEventListener('click', toggleTheme);
+
+        // Tab Navigation Switcher
+        function switchTab(tabId) {
+            ['dashboard', 'logger', 'routines', 'history'].forEach(id => {
+                const tabEl = document.getElementById(`tab-${id}`);
+                const navEl = document.getElementById(`nav-${id}`);
+                if (id === tabId) {
+                    tabEl.classList.remove('hidden');
+                    navEl.classList.add('bg-brand-500', 'text-white', 'shadow-md', 'shadow-brand-500/20');
+                    navEl.classList.remove('text-gray-600', 'dark:text-gray-300', 'hover:bg-gray-100', 'dark:hover:bg-gray-700/50');
+                } else {
+                    tabEl.classList.add('hidden');
+                    navEl.classList.remove('bg-brand-500', 'text-white', 'shadow-md', 'shadow-brand-500/20');
+                    navEl.classList.add('text-gray-600', 'dark:text-gray-300', 'hover:bg-gray-100', 'dark:hover:bg-gray-700/50');
+                }
+            });
+
+            if (tabId === 'dashboard') renderDashboard();
+            if (tabId === 'history') renderHistoryLogs();
+        }
+
+        function setDefaultDate() {
+            document.getElementById('sessionDate').value = new Date().toISOString().split('T')[0];
+        }
+
+        // Toast Helper
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-brand-500' : 'bg-red-500';
+            toast.className = `${bgColor} text-white px-4 py-3 rounded-xl shadow-lg flex items-center space-x-2 text-xs font-medium transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto`;
+            toast.innerHTML = `<i class="fa-solid fa-circle-info"></i><span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ================= WORKOUT LOGGER LOGIC =================
+        function addExerciseCard(data = null) {
+            const container = document.getElementById('exerciseListContainer');
+            const cardId = 'ex-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4);
+
+            const exerciseName = data ? data.name : '';
+            const category = data ? data.category : 'Strength';
+
+            const cardHTML = `
+                <div id="${cardId}" class="exercise-card bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <input type="text" placeholder="Exercise Name (e.g. Incline Bench Press)" value="${exerciseName}" class="ex-name px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 font-semibold">
+                            <select class="ex-category px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                                <option value="Strength" ${category === 'Strength' ? 'selected' : ''}>Strength</option>
+                                <option value="Cardio" ${category === 'Cardio' ? 'selected' : ''}>Cardio</option>
+                                <option value="Flexibility" ${category === 'Flexibility' ? 'selected' : ''}>Flexibility</option>
+                                <option value="Bodyweight" ${category === 'Bodyweight' ? 'selected' : ''}>Bodyweight</option>
+                            </select>
+                        </div>
+                        <button onclick="removeExerciseCard('${cardId}')" class="text-xs text-red-500 hover:text-red-700 font-medium px-3 py-2 rounded-xl border border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors self-end sm:self-center">
+                            <i class="fa-solid fa-trash-can mr-1"></i> Remove Exercise
+                        </button>
+                    </div>
+
+                    <!-- Sets List -->
+                    <div class="space-y-2">
+                        <div class="grid grid-cols-12 gap-2 text-xs font-semibold text-gray-400 uppercase px-1">
+                            <span class="col-span-2">Set</span>
+                            <span class="col-span-3">Reps</span>
+                            <span class="col-span-3">Weight (kg)</span>
+                            <span class="col-span-3">Time (min)</span>
+                            <span class="col-span-1 text-center"></span>
+                        </div>
+                        <div class="sets-container space-y-2"></div>
+                    </div>
+
+                    <button onclick="addSetRow('${cardId}')" class="text-xs font-semibold text-brand-500 hover:text-brand-600 transition-colors flex items-center space-x-1 py-1">
+                        <i class="fa-solid fa-plus text-2xs"></i>
+                        <span>Add Set</span>
+                    </button>
+                </div>
+            `;
+
+            container.insertAdjacentHTML('beforeend', cardHTML);
+
+            if (data && data.sets && data.sets.length > 0) {
+                data.sets.forEach(s => addSetRow(cardId, s));
+            } else {
+                addSetRow(cardId); // default empty set
+            }
+        }
+
+        function removeExerciseCard(cardId) {
+            const card = document.getElementById(cardId);
+            if (card) card.remove();
+        }
+
+        function addSetRow(cardId, setData = null) {
+            const card = document.getElementById(cardId);
+            if (!card) return;
+            const container = card.querySelector('.sets-container');
+            const setIndex = container.children.length + 1;
+
+            const reps = setData ? setData.reps : '';
+            const weight = setData ? setData.weight : '';
+            const duration = setData ? setData.duration : '';
+
+            const row = document.createElement('div');
+            row.className = 'set-row grid grid-cols-12 gap-2 items-center';
+            row.innerHTML = `
+                <span class="col-span-2 text-xs font-bold text-gray-400 px-1">Set ${setIndex}</span>
+                <input type="number" placeholder="0" value="${reps}" min="0" class="set-reps col-span-3 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500">
+                <input type="number" placeholder="0" value="${weight}" min="0" step="0.5" class="set-weight col-span-3 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500">
+                <input type="number" placeholder="0" value="${duration}" min="0" step="0.5" class="set-duration col-span-3 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500">
+                <button onclick="this.parentElement.remove()" class="col-span-1 text-center text-gray-400 hover:text-red-500 transition-colors">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            `;
+            container.appendChild(row);
+        }
+
+        function resetLoggerForm() {
+            document.getElementById('sessionTitle').value = '';
+            document.getElementById('sessionDuration').value = '';
+            document.getElementById('exerciseListContainer').innerHTML = '';
+            addExerciseCard();
+            setDefaultDate();
+        }
+
+        function saveWorkoutSession() {
+            const title = document.getElementById('sessionTitle').value.trim() || 'Workout Session';
+            const date = document.getElementById('sessionDate').value;
+            const duration = parseFloat(document.getElementById('sessionDuration').value) || 0;
+
+            const cards = document.querySelectorAll('.exercise-card');
+            if (cards.length === 0) {
+                showToast('Please add at least one exercise!', 'error');
+                return;
+            }
+
+            const exercises = [];
+            let totalSessionVolume = 0;
+
+            cards.forEach(card => {
+                const name = card.querySelector('.ex-name').value.trim();
+                const category = card.querySelector('.ex-category').value;
+                if (!name) return;
+
+                const setRows = card.querySelectorAll('.set-row');
+                const sets = [];
+
+                setRows.forEach(row => {
+                    const reps = parseFloat(row.querySelector('.set-reps').value) || 0;
+                    const weight = parseFloat(row.querySelector('.set-weight').value) || 0;
+                    const dur = parseFloat(row.querySelector('.set-duration').value) || 0;
+
+                    totalSessionVolume += (reps * weight);
+                    sets.push({ reps, weight, duration: dur });
+                });
+
+                if (sets.length > 0) {
+                    exercises.push({ name, category, sets });
+                }
+            });
+
+            if (exercises.length === 0) {
+                showToast('Please fill out exercise details!', 'error');
+                return;
+            }
+
+            const sessionLog = {
+                id: 'log-' + Date.now(),
+                title,
+                date,
+                duration,
+                volume: totalSessionVolume,
+                exercises
+            };
+
+            workoutLogs.unshift(sessionLog);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(workoutLogs));
+
+            showToast('Workout logged successfully!');
+            resetLoggerForm();
+            switchTab('dashboard');
+        }
+
+        // ================= DASHBOARD & CHARTS LOGIC =================
+        function renderDashboard() {
+            // Stats Calculations
+            const totalWorkouts = workoutLogs.length;
+            const totalVolume = workoutLogs.reduce((acc, curr) => acc + (curr.volume || 0), 0);
+            const totalTimeMinutes = workoutLogs.reduce((acc, curr) => acc + (curr.duration || 0), 0);
+            const streak = calculateStreak();
+
+            document.getElementById('statTotalWorkouts').innerText = totalWorkouts;
+            document.getElementById('statStreak').innerText = `${streak} Days`;
+            document.getElementById('statTotalVolume').innerText = `${totalVolume.toLocaleString()} kg`;
+            document.getElementById('statTotalTime').innerText = `${(totalTimeMinutes / 60).toFixed(1)} hrs`;
+
+            renderDashboardRecentList();
+            renderCharts();
+        }
+
+        function calculateStreak() {
+            if (workoutLogs.length === 0) return 0;
+            const dates = Array.from(new Set(workoutLogs.map(l => l.date))).sort().reverse();
+            
+            let streak = 0;
+            let checkDate = new Date();
+            
+            // Format date to YYYY-MM-DD
+            const formatDate = (d) => d.toISOString().split('T')[0];
+
+            let todayStr = formatDate(checkDate);
+            let yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            let yesterdayStr = formatDate(yesterday);
+
+            // Check if user worked out today or yesterday to maintain active streak
+            if (!dates.includes(todayStr) && !dates.includes(yesterdayStr)) {
+                return 0;
+            }
+
+            let curr = dates.includes(todayStr) ? new Date() : yesterday;
+
+            while (true) {
+                const dateStr = formatDate(curr);
+                if (dates.includes(dateStr)) {
+                    streak++;
+                    curr.setDate(curr.getDate() - 1);
+                } else {
+                    break;
+                }
+            }
+
+            return streak;
+        }
+
+        function renderDashboardRecentList() {
+            const container = document.getElementById('dashboardRecentList');
+            if (workoutLogs.length === 0) {
+                container.innerHTML = `<p class="text-xs text-gray-400 py-4 text-center">No workouts recorded yet. Start logging today!</p>`;
+                return;
+            }
+
+            const recent = workoutLogs.slice(0, 3);
+            container.innerHTML = recent.map(log => `
+                <div class="py-3 flex items-center justify-between">
+                    <div class="space-y-1">
+                        <div class="font-bold text-sm flex items-center space-x-2">
+                            <span>${log.title}</span>
+                            <span class="text-2xs bg-brand-500/10 text-brand-500 px-2 py-0.5 rounded-full font-medium">${log.exercises.length} exercises</span>
+                        </div>
+                        <div class="text-xs text-gray-400 flex items-center space-x-3">
+                            <span><i class="fa-regular fa-calendar mr-1"></i>${log.date}</span>
+                            <span><i class="fa-regular fa-clock mr-1"></i>${log.duration} mins</span>
+                            <span><i class="fa-solid fa-weight-hanging mr-1"></i>${log.volume} kg</span>
+                        </div>
+                    </div>
+                    <button onclick="loadWorkoutIntoLogger('${log.id}')" class="text-xs font-semibold text-brand-500 hover:underline">Repeat</button>
+                </div>
+            `).join('');
+        }
+
+        function renderCharts() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#9ca3af' : '#4b5563';
+            const gridColor = isDark ? 'rgba(75, 85, 99, 0.2)' : 'rgba(229, 231, 235, 0.8)';
+
+            // Volume Chart
+            const ctxVolume = document.getElementById('volumeChart').getContext('2d');
+            const sortedLogs = [...workoutLogs].sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-7);
+            
+            const volumeLabels = sortedLogs.map(l => l.date);
+            const volumeData = sortedLogs.map(l => l.volume);
+
+            if (volumeChartInstance) volumeChartInstance.destroy();
+            volumeChartInstance = new Chart(ctxVolume, {
+                type: 'line',
+                data: {
+                    labels: volumeLabels.length ? volumeLabels : ['No Data'],
+                    datasets: [{
+                        label: 'Volume (kg)',
+                        data: volumeData.length ? volumeData : [0],
+                        borderColor: '#22c55e',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: textColor }, grid: { color: gridColor } },
+                        y: { ticks: { color: textColor }, grid: { color: gridColor } }
+                    }
+                }
+            });
+
+            // Category Chart
+            const ctxCategory = document.getElementById('categoryChart').getContext('2d');
+            const catCounts = { Strength: 0, Cardio: 0, Flexibility: 0, Bodyweight: 0 };
+            
+            workoutLogs.forEach(log => {
+                log.exercises.forEach(ex => {
+                    const cat = ex.category || 'Strength';
+                    if (catCounts[cat] !== undefined) catCounts[cat]++;
+                });
+            });
+
+            if (categoryChartInstance) categoryChartInstance.destroy();
+            categoryChartInstance = new Chart(ctxCategory, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(catCounts),
+                    datasets: [{
+                        data: Object.values(catCounts),
+                        backgroundColor: ['#22c55e', '#3b82f6', '#a855f7', '#f97316'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: textColor, boxWidth: 12, font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        // ================= ROUTINES & TEMPLATES LOGIC =================
+        function renderPresetTemplates() {
+            const container = document.getElementById('presetTemplatesContainer');
+            container.innerHTML = PRESET_TEMPLATES.map(tmpl => `
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm flex flex-col justify-between space-y-4">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold px-2 py-0.5 rounded bg-brand-500/10 text-brand-500 uppercase">${tmpl.category}</span>
+                            <span class="text-xs text-gray-400">${tmpl.exercises.length} Exercises</span>
+                        </div>
+                        <h4 class="font-bold text-base mb-2">${tmpl.name}</h4>
+                        <ul class="text-xs text-gray-400 space-y-1">
+                            ${tmpl.exercises.map(e => `<li><i class="fa-solid fa-angle-right text-brand-500 mr-1"></i>${e.name}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <button onclick="loadTemplateIntoLogger('${tmpl.id}')" class="w-full py-2 bg-gray-100 dark:bg-gray-700/50 hover:bg-brand-500 hover:text-white rounded-xl text-xs font-semibold transition-colors">
+                        Use Template
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function renderCustomRoutines() {
+            const container = document.getElementById('customRoutinesContainer');
+            if (customRoutines.length === 0) {
+                container.innerHTML = `<p class="text-xs text-gray-400 col-span-3 py-4">No custom routines saved yet. Save completed workouts as routines from the History tab.</p>`;
+                return;
+            }
+
+            container.innerHTML = customRoutines.map(rt => `
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm flex flex-col justify-between space-y-4">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-500 uppercase">Custom</span>
+                            <button onclick="deleteCustomRoutine('${rt.id}')" class="text-xs text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                        <h4 class="font-bold text-base mb-2">${rt.name}</h4>
+                        <p class="text-xs text-gray-400">${rt.exercises.length} Exercises saved</p>
+                    </div>
+                    <button onclick="loadCustomRoutineIntoLogger('${rt.id}')" class="w-full py-2 bg-gray-100 dark:bg-gray-700/50 hover:bg-brand-500 hover:text-white rounded-xl text-xs font-semibold transition-colors">
+                        Load Routine
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function loadTemplateIntoLogger(tmplId) {
+            const tmpl = PRESET_TEMPLATES.find(t => t.id === tmplId);
+            if (!tmpl) return;
+
+            resetLoggerForm();
+            document.getElementById('sessionTitle').value = tmpl.name;
+            document.getElementById('exerciseListContainer').innerHTML = '';
+
+            tmpl.exercises.forEach(ex => addExerciseCard(ex));
+            switchTab('logger');
+            showToast(`Loaded ${tmpl.name} template!`);
+        }
+
+        function loadCustomRoutineIntoLogger(rtId) {
+            const rt = customRoutines.find(r => r.id === rtId);
+            if (!rt) return;
+
+            resetLoggerForm();
+            document.getElementById('sessionTitle').value = rt.name;
+            document.getElementById('exerciseListContainer').innerHTML = '';
+
+            rt.exercises.forEach(ex => addExerciseCard(ex));
+            switchTab('logger');
+            showToast(`Loaded ${rt.name} routine!`);
+        }
+
+        function saveWorkoutAsRoutine(logId) {
+            const log = workoutLogs.find(l => l.id === logId);
+            if (!log) return;
+
+            const routine = {
+                id: 'rt-' + Date.now(),
+                name: log.title,
+                exercises: log.exercises
+            };
+
+            customRoutines.push(routine);
+            localStorage.setItem(CUSTOM_ROUTINES_KEY, JSON.stringify(customRoutines));
+            renderCustomRoutines();
+            showToast('Saved as custom routine!');
+        }
+
+        function deleteCustomRoutine(rtId) {
+            customRoutines = customRoutines.filter(r => r.id !== rtId);
+            localStorage.setItem(CUSTOM_ROUTINES_KEY, JSON.stringify(customRoutines));
+            renderCustomRoutines();
+            showToast('Routine deleted');
+        }
+
+        // ================= HISTORY LOGS LOGIC =================
+        function renderHistoryLogs(filteredList = null) {
+            const container = document.getElementById('historyLogsList');
+            const list = filteredList || workoutLogs;
+
+            if (list.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl text-center space-y-2 border border-gray-100 dark:border-gray-700/50">
+                        <i class="fa-solid fa-folder-open text-3xl text-gray-400"></i>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">No workout logs found.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = list.map(log => `
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-700/50 pb-3">
+                        <div>
+                            <h3 class="font-bold text-base">${log.title}</h3>
+                            <div class="text-xs text-gray-400 flex items-center space-x-3 mt-0.5">
+                                <span><i class="fa-regular fa-calendar mr-1"></i>${log.date}</span>
+                                <span><i class="fa-regular fa-clock mr-1"></i>${log.duration} mins</span>
+                                <span><i class="fa-solid fa-weight-hanging mr-1"></i>${log.volume} kg total volume</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2 self-end sm:self-center">
+                            <button onclick="saveWorkoutAsRoutine('${log.id}')" title="Save as Custom Routine" class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-xs font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                <i class="fa-solid fa-bookmark mr-1"></i> Save Routine
+                            </button>
+                            <button onclick="deleteWorkoutLog('${log.id}')" class="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Exercises Breakdown -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        ${log.exercises.map(ex => `
+                            <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-900/60 border border-gray-100 dark:border-gray-800 text-xs space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-bold">${ex.name}</span>
+                                    <span class="text-2xs px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-800 font-medium">${ex.category}</span>
+                                </div>
+                                <div class="text-gray-400 space-y-0.5">
+                                    ${ex.sets.map((s, idx) => `
+                                        <div>Set ${idx+1}: ${s.reps ? s.reps + ' reps' : ''} ${s.weight ? '× ' + s.weight + ' kg' : ''} ${s.duration ? '(' + s.duration + ' min)' : ''}</div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterHistory() {
+            const query = document.getElementById('historySearch').value.toLowerCase();
+            const category = document.getElementById('historyCategoryFilter').value;
+
+            const filtered = workoutLogs.filter(log => {
+                const matchesSearch = log.title.toLowerCase().includes(query) || 
+                    log.exercises.some(ex => ex.name.toLowerCase().includes(query));
+                
+                const matchesCategory = category === 'ALL' || 
+                    log.exercises.some(ex => ex.category === category);
+
+                return matchesSearch && matchesCategory;
+            });
+
+            renderHistoryLogs(filtered);
+        }
+
+        function deleteWorkoutLog(id) {
+            workoutLogs = workoutLogs.filter(l => l.id !== id);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(workoutLogs));
+            renderHistoryLogs();
+            showToast('Workout deleted');
+        }
+
+        function loadWorkoutIntoLogger(id) {
+            const log = workoutLogs.find(l => l.id === id);
+            if (!log) return;
+
+            resetLoggerForm();
+            document.getElementById('sessionTitle').value = log.title;
+            document.getElementById('exerciseListContainer').innerHTML = '';
+
+            log.exercises.forEach(ex => addExerciseCard(ex));
+            switchTab('logger');
+            showToast('Loaded workout into logger');
+        }
+
+        // Export/Import JSON Data
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(workoutLogs, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", `fitpulse_backup_${new Date().toISOString().split('T')[0]}.json`);
+            dlAnchorElem.click();
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        workoutLogs = imported;
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(workoutLogs));
+                        renderHistoryLogs();
+                        renderDashboard();
+                        showToast('Data imported successfully!');
+                    } else {
+                        showToast('Invalid JSON file format', 'error');
+                    }
+                } catch (err) {
+                    showToast('Failed to parse file', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // ================= REST TIMER LOGIC =================
+        function openTimerModal() {
+            document.getElementById('timerModal').classList.remove('hidden');
+        }
+
+        function closeTimerModal() {
+            document.getElementById('timerModal').classList.add('hidden');
+        }
+
+        function setTimerSeconds(sec) {
+            timerTotalTime = sec;
+            timerTimeRemaining = sec;
+            updateTimerDisplay();
+        }
+
+        function updateTimerDisplay() {
+            const m = Math.floor(timerTimeRemaining / 60).toString().padStart(2, '0');
+            const s = (timerTimeRemaining % 60).toString().padStart(2, '0');
+            const str = `${m}:${s}`;
+            
+            document.getElementById('timerModalDisplay').innerText = str;
+            document.getElementById('timerDisplayShort').innerText = str;
+        }
+
+        function toggleTimer() {
+            const btn = document.getElementById('timerStartBtn');
+            if (isTimerRunning) {
+                clearInterval(timerInterval);
+                isTimerRunning = false;
+                btn.innerText = 'Start';
+                btn.classList.replace('bg-amber-500', 'bg-brand-500');
+            } else {
+                isTimerRunning = true;
+                btn.innerText = 'Pause';
+                btn.classList.replace('bg-brand-500', 'bg-amber-500');
+
+                timerInterval = setInterval(() => {
+                    if (timerTimeRemaining > 0) {
+                        timerTimeRemaining--;
+                        updateTimerDisplay();
+                    } else {
+                        clearInterval(timerInterval);
+                        isTimerRunning = false;
+                        btn.innerText = 'Start';
+                        btn.classList.replace('bg-amber-500', 'bg-brand-500');
+                        playTimerBeep();
+                        showToast('Rest time is up!');
+                    }
+                }, 1000);
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            timerTimeRemaining = timerTotalTime;
+            const btn = document.getElementById('timerStartBtn');
+            btn.innerText = 'Start';
+            btn.classList.replace('bg-amber-500', 'bg-brand-500');
+            updateTimerDisplay();
+        }
+    </script>
+</body>
+</html>
